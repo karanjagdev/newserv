@@ -17,7 +17,7 @@
 
 // Information NPC
 //============================================================
-prontera,149,193,4	script	WOE Information	2_BOARD1,{
+prontera,147,174,4	script	WOE Information	2_BOARD1,{
 	doevent "WOE_CONTROL::OnMenu";
 	end;
 OnAgitStart:
@@ -41,8 +41,8 @@ OnInit:
 
 	set .CastleWarp,0;		// 1: Always enable all castle warps. | 0: Warp only to active castles.
 	set .AutoKick,1;		// Automatically kick players from inactive castles during WOE? (1:yes / 0:no)
-	set .NoOwner,0; 		// Automatically kick players from unconquered castles outside of WOE? (1:yes / 0:no)
-	set .ExitWarp,0;		// Warp all players from castles when WOE ends? (1:yes / 0:no)
+	set .NoOwner,1; 		// Automatically kick players from unconquered castles outside of WOE? (1:yes / 0:no)
+	set .ExitWarp,1;		// Warp all players from castles when WOE ends? (1:yes / 0:no)
 	set .GMAccess,99;		// GM level required to access Session Manager.
 
 // -----------------------------------------------------------

@@ -1769,7 +1769,7 @@ ACMD(go) {
 		int x, y;
 		int min_match; ///< Minimum string length to match
 	} data[] = {
-		{ MAP_PRONTERA,    156, 191, 3 }, //  0 = Prontera
+		{ MAP_PRONTERA,    156, 180, 3 }, //  0 = Prontera
 		{ MAP_MORROC,      156,  93, 4 }, //  1 = Morroc
 		{ MAP_GEFFEN,      119,  59, 3 }, //  2 = Geffen
 		{ MAP_PAYON,       162, 233, 3 }, //  3 = Payon

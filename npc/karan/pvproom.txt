@@ -1,0 +1,23 @@
+//-------Tara RO Script------//
+//------Author: Karan Jagdev--//
+//---fb.com/karan.jagdev----//
+
+prontera,147,171,4	script	PVP Warper	106,{
+if (!agitcheck() || !agitcheck2()) {
+	menu "The High Grounds",L_g1,"DeathMatch",L_dmatch;
+	
+	L_g1:
+	if (select("Yes!","No thanks.") == 2) close;
+		warp "guild_vs3",0,0;
+		announce strcharinfo(0) + "has entered the PVP High Grounds.",0;
+		announce "There are ["+getmapusers("guild_vs5")+"/30] players inside.",0;
+		end;
+	L_dmatch:
+		if (select("Yes!","No thanks.") == 2) close;
+		warp "guild_vs2",0,0;
+		announce strcharinfo(0) + " has entered the PVP DeathMatch.",0;
+		announce "There are ["+getmapusers("guild_vs5")+"/30] players inside.",0;
+		end;
+	}
+	end;
+}

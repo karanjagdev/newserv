@@ -27,11 +27,11 @@ function Go; function Disp; function Pick; function Restrict;
 
 menu	"Last Warp ^777777["+lastwarp$+"]^000000",-,
 		" ~ Towns",Towns,
-		" ~ Fields",Fields,
-		" ~ Dungeons",Dungeons,
+//		" ~ Fields",Fields,
+//		" ~ Dungeons",Dungeons,
 		" ~ Guild Castles",Castles,
-		" ~ Guild Dungeons",Guild_Dungeons,
-		" ~ Instances",Instances,
+//		" ~ Guild Dungeons",Guild_Dungeons,
+//		" ~ Instances",Instances,
 		" ~ Special Areas",Special;
 
 	if (lastwarp$ == "")
@@ -496,7 +496,7 @@ nameless_n,259,213,4	duplicate(Warper)	Warper#nam	4_F_VALKYRIE
 niflheim,205,179,4	duplicate(Warper)	Warper#nif	4_F_VALKYRIE
 pay_arche,42,134,4	duplicate(Warper)	Warper#arc	4_F_VALKYRIE
 payon,182,108,4	duplicate(Warper)	Warper#pay	4_F_VALKYRIE
-prontera,159,192,4	duplicate(Warper)	Warper#prt	4_F_VALKYRIE
+prontera,156,171,4	duplicate(Warper)	Warper#prt	4_F_VALKYRIE
 prt_fild05,279,223,6	duplicate(Warper)	Warper#cul	4_F_VALKYRIE
 rachel,135,116,4	duplicate(Warper)	Warper#rac	4_F_VALKYRIE
 splendide,205,153,4	duplicate(Warper)	Warper#spl	4_F_VALKYRIE

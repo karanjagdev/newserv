@@ -1,0 +1,45 @@
+//===== eAthena Script =======================================
+//= Healer
+//===== By: ==================================================
+//= Kaushik for InRO
+//===== Current Version: =====================================
+//= 1.0
+//===== Compatible With: =====================================
+//= eAthena SVN
+//===== Version History: =====================================
+//= 1.0 Needs to be tested.
+//============================================================
+
+izlude,122,107,5	script	Healer	903,3,3,{
+percentheal 100,100;
+skilleffect 34,0; sc_start SC_BLESSING,360000,10;
+skilleffect 29,0; sc_start SC_INCREASEAGI,360000,10;
+if(BaseLevel<90) 
+{
+skilleffect 74,0; sc_start SC_MAGNIFICAT,360000,5;
+skilleffect 33,0; sc_start SC_ANGELUS,360000,10;
+skilleffect 361,0; sc_start SC_ASSUMPTIO,360000,5;
+}
+sc_end SC_POISON;
+sc_end SC_SILENCE;
+sc_end SC_BLIND;
+sc_end SC_CONFUSION;
+sc_end SC_CURSE;
+sc_end SC_HALLUCINATION11;
+}
+
+
+morocc,159,96,5	duplicate(Healer)	Healer#h1-2	834,3,3
+prontera,158,187,4	duplicate(Healer)	Healer#h1-3	834,3,3
+geffen,121,61,5	duplicate(Healer)	Healer#h1-4	834,3,3
+umbala,94,162,5	duplicate(Healer)	Healer#h1-5	834,3,3
+payon,147,237,5	duplicate(Healer)	Healer#h1-6	834,3,3
+alberta,185,144,5	duplicate(Healer)	Healer#h1-7	834,3,3
+aldebaran,134,123,5	duplicate(Healer)	Healer#h1-8	834,3,3
+xmas,149,136,5	duplicate(Healer)	Healer#h1-10	834,3,3
+comodo,188,162,5	duplicate(Healer)	Healer#h1-11	834,3,3
+amatsu,200,80,5	duplicate(Healer)	Healer#h1-12	834,3,3
+gonryun,156,124,4	duplicate(Healer)	Healer#h1-13	834,3,3
+yuno,152,186,5	duplicate(Healer)	Healer#h1-14	834,3,3
+niflheim,188,180,5	duplicate(Healer)	Healer#h1-15	834,3,3
+louyang,225,103,5	duplicate(Healer)	Healer#h1-16	834,3,3
