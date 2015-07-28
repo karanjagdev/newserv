@@ -1,0 +1,82 @@
+//-----WoE Supplier v1.0--------//
+//-----Tara Ragnarok Online----//
+//-----Author: Karan Jagdev---//
+//-----fb.com/karan.jagdev---//
+
+prontera,148,176,6	script	WoE Supplies	877,{
+if (!agitcheck() || !agitcheck2()) {
+	.@GID = getcharid(2);
+		mes "What do you want?.";
+next;
+cutin "nyuang_3",2;
+menu "Supplies of course..!",L_pun,"Err...Just Clicked anyway",L_no2;
+next;
+L_pun:
+		mes "You greedy, you want supplies before WoE..!";
+cutin "nyuang_4",2;
+next;
+			if (.@GID == 0) {
+			announce ""+strcharinfo(0)+" is being greedy and want supplies all alone",bc_red|bc_all;
+			}
+			else{
+		announce ""+strcharinfo(0)+" of guild "+getguildname(.@GID)+" is being greedy and want supplies before WoE",bc_red|bc_all;
+		}
+next;
+mes "You deserve a punishment";
+atcommand "@mute 2" +strcharinfo(0);
+	close2;
+cutin "", 255;
+	end;
+	L_no2:
+	cutin "nyuang_4",2;
+	mes "Then don't waste my time you looser.";
+	close2;
+	cutin "", 255;
+	end;
+}
+//--------------WoE Start Script------------//
+else{
+	.@GID = getcharid(2);
+	if (.@GID == 0) {
+	cutin "nyuang_1",2;
+		mes "Sorry you are not in a guild";
+		close2;
+		cutin "", 255;
+	}
+	if (strcharinfo(0) == getguildmaster(.@GID)) {
+		mes "Welcome guild master of "+getguildname(.@GID);
+		cutin "nyuang_3",2;
+		next;
+		menu "Please provide me with supplies",L_sup2,"I want announce recruitment message",L_announce,"Nothing",L_no;
+		L_sup2:
+		if (countitem(714) == 0) {
+		mes "I require 1 Emperium as a token of honour to provide you supplies.";
+		close;
+		}
+		else if(countitem(714) >= 1) {
+		mes "Very well then, I will provide you with supplies in return of your Emperium.";
+		next;
+		delitem 714, 1;
+		getitem 678,500;
+		cutin "", 255;
+		close2;
+			L_no:
+	mes "Then don't waste my time you looser.";
+	cutin "nyuang_4",2;
+	close2;
+	cutin "", 255;
+	end;
+	L_announce:
+	mes "I will charge 3 Emperium for recruitment broadcast";
+	close;
+	}
+}
+	else{
+	mes "[WoE Supplier]";
+	mes "Sorry you don't own the guild you are in";
+	cutin "nyuang_2",2;
+	close2;
+	cutin "", 255;
+	}
+}
+}

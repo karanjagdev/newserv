@@ -1,9 +1,13 @@
 //Entering Beginner Zone
 
--	script	Beginner Zone	-1,{
+new_1-1,57,113,4	script	Beginner Zone	109,{
 
+mes "Hello "+strcharinfo(0)+"";
+mes "What can I do for you?";
+next;
+menu "Warp me to training room",B_room,"Warp me to capital city",ok,"Nothing, Just exploring things",fine;
 OnPCLoginEvent:
-	if(class == 0 || class == 4001)	{
+	if(Class == 0 || Class == 4001)	{
 
 	mes "Would you like to go to the Beginner Zone?";
 	if(select("Yes", "No") == 1) goto B_room;
@@ -11,28 +15,34 @@ OnPCLoginEvent:
 	close;
 
 B_room:
-	if(class == 0 || class == 4001)	{
+	if(Class == 0 || Class == 4001)	{
 	warp "force_1-1" ,25,24;
 	} 
 	else {
 	mes "Only Novice and High Novice Can Enter This Room";
 	}
 	close;
- 
+ ok:
+	warp "prontera" ,156,180;
+	savepoint "prontera",156,180;
+	close;
+fine:
+	mes "Happy To Help You ^_^";
+	close;
 }
 
 //The Exit to Amatsu
 
 force_1-1.gat,25,26,3	script	Exit	729,{
-	mes "Do You want to leave?";
+	mes "What do you want?";
 	next;
-	menu "Yes",ok,"No",fine;
+	menu "Warp to capital",ok,"Nothing",fine;
 ok:
 	warp "prontera" ,156,180;
 	savepoint "prontera",156,180;
 	close;
 fine:
-	mes "Then you can still leveling in this room";
+	mes "Happy Leveling ^_^";
 	close;
 	
 }

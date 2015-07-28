@@ -4,8 +4,9 @@
 
 prontera,147,171,4	script	PVP Warper	106,{
 if (!agitcheck() || !agitcheck2()) {
-	menu "The High Grounds",L_g1,"DeathMatch",L_dmatch;
-	
+mes "Please choose your preferred battle yard...!";
+cutin "prt_soldier",2;
+menu "The High Grounds",L_g1,"DeathMatch",L_dmatch;
 	L_g1:
 	if (select("Yes!","No thanks.") == 2) close;
 		warp "guild_vs3",0,0;
@@ -14,10 +15,52 @@ if (!agitcheck() || !agitcheck2()) {
 		end;
 	L_dmatch:
 		if (select("Yes!","No thanks.") == 2) close;
-		warp "guild_vs2",0,0;
+		warp "guild_vs5",0,0;
 		announce strcharinfo(0) + " has entered the PVP DeathMatch.",0;
 		announce "There are ["+getmapusers("guild_vs5")+"/30] players inside.",0;
 		end;
+
 	}
+					else {
+		mes "SORRY, PvP ROOMS are on maintenance due to lack of Rune Midgard staff during WoE.";
+		cutin "bat_crua2",2;
+		close2;
+cutin "", 255;
+		}
+	end;
+}
+
+//-------Tara RO Script------//
+//------Author: Karan Jagdev--//
+//---fb.com/karan.jagdev----//
+
+prontera,147,167,4	script	GVG Warper	105,{
+if (!agitcheck() || !agitcheck2()) {
+mes "Please choose a room..!";
+cutin "prt_soldier",2;
+	menu "The Gvg High Grounds",L_w1,"GvG Face OFF",L_g2;
+	
+	L_w1:
+	if (select("Yes!","No thanks.") == 2) close;
+		warp "guild_vs1",0,0;
+		announce strcharinfo(0) + "has entered the GvG High Grounds.",0;
+		announce "There are ["+getmapusers("guild_vs5")+"/30] players inside.",0;
+		end;
+	L_g2:
+		if (select("Yes!","No thanks.") == 2) close;
+		warp "guild_vs2",0,0;
+		announce strcharinfo(0) + " has entered the GvG Face Off..!",0;
+		announce "There are ["+getmapusers("guild_vs5")+"/30] players inside.",0;
+		end;
+
+	}
+		else {
+		mes "SORRY, GvG ROOMS are on maintenance due to lack of Rune Midgard Staff during WoE.";
+		cutin "bat_crua2",2;
+		next;
+		mes "You can join a guild if you want or you can go hunting";
+		close2;
+cutin "", 255;
+		}
 	end;
 }
