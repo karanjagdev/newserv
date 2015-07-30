@@ -1793,7 +1793,7 @@ ACMD(go) {
 		{ MAP_JAWAII,      249, 127, 3 }, // 17 = Jawaii
 		{ MAP_AYOTHAYA,    151, 117, 3 }, // 18 = Ayothaya
 		{ MAP_EINBROCH,     64, 200, 5 }, // 19 = Einbroch
-		{ MAP_LIGHTHALZEN, 158,  92, 3 }, // 20 = Lighthalzen
+	/*	{ MAP_LIGHTHALZEN, 158,  92, 3 }, // 20 = Lighthalzen
 		{ MAP_EINBECH,      70,  95, 5 }, // 21 = Einbech
 		{ MAP_HUGEL,        96, 145, 3 }, // 22 = Hugel
 		{ MAP_RACHEL,      130, 110, 3 }, // 23 = Rachel
@@ -1809,6 +1809,7 @@ ACMD(go) {
 		{ MAP_MALANGDO,    140, 114, 5 }, // 33 = Malangdo Island
 		{ MAP_MALAYA,      242, 211, 5 }, // 34 = Malaya Port
 		{ MAP_ECLAGE,      110,  39, 3 }, // 35 = Eclage
+		*/
 	};
 
 	memset(map_name, '\0', sizeof(map_name));
