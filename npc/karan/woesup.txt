@@ -4,7 +4,7 @@
 //-----fb.com/karan.jagdev---//
 
 prontera,148,176,6	script	WoE Supplies	877,{
-if (!agitcheck() || !agitcheck2()) {
+if (!(agitcheck() || agitcheck2())){
 	.@GID = getcharid(2);
 		mes "What do you want?.";
 next;

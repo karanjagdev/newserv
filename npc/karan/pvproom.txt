@@ -3,7 +3,7 @@
 //---fb.com/karan.jagdev----//
 
 prontera,147,171,4	script	PVP Warper	106,{
-if (!agitcheck() || !agitcheck2()) {
+if (!(agitcheck() || agitcheck2())){
 mes "Please choose your preferred battle yard...!";
 cutin "prt_soldier",2;
 menu "The High Grounds",L_g1,"DeathMatch",L_dmatch;
@@ -35,7 +35,7 @@ cutin "", 255;
 //---fb.com/karan.jagdev----//
 
 prontera,147,167,4	script	GVG Warper	105,{
-if (!agitcheck() || !agitcheck2()) {
+if (!(agitcheck() || agitcheck2())){
 mes "Please choose a room..!";
 cutin "prt_soldier",2;
 	menu "The Gvg High Grounds",L_w1,"GvG Face OFF",L_g2;
