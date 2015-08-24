@@ -13,7 +13,7 @@
 //==================================================
 // gef_dun00 - Geffen Dungeon F1
 //==================================================
-gef_dun00,0,0,0,0	monster	Hunter Fly	1035,30,60000,30000,0
+//gef_dun00,0,0,0,0	monster	Hunter Fly	1035,30,60000,30000,0
 gef_dun00,0,0,0,0	monster	Poporing	1031,15,0,0,0
 gef_dun00,0,0,0,0	monster	Poison Spore	1077,25,0,0,0
 gef_dun00,91,106,0,0	monster	Red Plant	1078,1,300000,150000,0

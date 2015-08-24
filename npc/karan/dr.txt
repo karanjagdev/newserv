@@ -1,0 +1,19 @@
+-	script	Sample	-1,{
+    OnPCLoginEvent:
+        if ( gettimetick(2) < #timer ) {
+            dispbottom "You already claimed the daily login rewards";
+            end;
+        }
+        for ( .@i = 0; .@i < .size; .@i += 2 ) {
+            getitembound 11501,10,4;
+getitembound 11502,10,4;
+            #timer = gettimetick(2) + ( .time_interval * 86400 );
+            end;
+        }
+
+    OnInit:
+        .time_interval = 1; // n day(s)
+        setarray .Items[0],11501,10,4,11502,10,4; // <item id>,<item amount>
+        .size = getarraysize(.Items);
+        end;
+}
