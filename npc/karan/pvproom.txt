@@ -34,7 +34,7 @@ if(strcharinfo(3) == "guild_vs5") {
 	sleep2 3000;
 	atcommand "@alive";
 	atcommand "@heal";
-	warp "guild_vs3",0,0;
+	warp "guild_vs5",0,0;
 	atcommand "@speed 50";
 	end;
 }
