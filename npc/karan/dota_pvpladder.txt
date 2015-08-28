@@ -534,5 +534,10 @@ prontera,144,171,4	script	PvP-StatsViewer	57,{
 				break;
 		}
 	}
+		while(1) {
+		delwaitingroom;
+		waitingroom "PvP Ranking",0;
+		sleep 1000;
+	}
 }
 
