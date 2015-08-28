@@ -357,6 +357,7 @@ OnPCLoadMapEvent:
 }
 
 prontera,144,171,4	script	PvP Ranking	57,{
+		waitingroom "Pvp Ranking",0;
 	set .@npcname$, strnpcinfo(0);
 	while (1) {
 		mes "["+ .@npcname$ +"]";
@@ -533,11 +534,6 @@ prontera,144,171,4	script	PvP Ranking	57,{
 				}
 				break;
 		}
-	}
-		while(1) {
-		delwaitingroom;
-		waitingroom "Pvp Ranking",0;
-		sleep 1000;
 	}
 }
 
