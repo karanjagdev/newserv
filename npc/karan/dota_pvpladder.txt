@@ -356,12 +356,7 @@ OnPCLoadMapEvent:
 	end;
 }
 
-prontera,144,171,4	script	PvP-StatsViewer	57,{
-		while(1) {
-		delwaitingroom;
-		waitingroom "PvP Ranking",0;
-		sleep 1000;
-	}
+prontera,144,171,4	script	PvP Ranking	57,{
 	set .@npcname$, strnpcinfo(0);
 	while (1) {
 		mes "["+ .@npcname$ +"]";
