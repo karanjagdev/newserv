@@ -28,6 +28,16 @@ menu "The High Grounds",L_g1,"DeathMatch",L_dmatch;
 cutin "", 255;
 		}
 	end;
+	OnPCDieEvent:
+if(strcharinfo(3) == "guild_vs5") {
+	dispbottom "You will respawn in 3 Seconds.";
+	sleep2 3000;
+	atcommand "@alive";
+	atcommand "@heal";
+	warp "guild_vs3",0,0;
+	atcommand "@speed 50";
+	end;
+}
 }
 
 //-------Tara RO Script------//
