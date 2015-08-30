@@ -1,6 +1,6 @@
 -	script	newlog	-1,{
 OnPCLoginEvent:
- if(##done	==	0) {
+ if(done	==	0) {
 	if(Class == 0 || Class == 4001)	{
 	mes "Welcome to Barba Ragnarok Online!!";
 	mes "We appritiate your stay and want to give you with a warm welcome reward.";
@@ -15,7 +15,7 @@ mes "There you go!";
 getitembound 1084,30,4;
 getitembound 7059,30,4;
 getitembound 12221,30,4;
-set ##done,1;
+set done,1;
 close;
 }
 }
