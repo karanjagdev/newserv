@@ -55,7 +55,7 @@
 //= - Hardcoded in refresh value for banner npc instead of getting it from config from WoEInfoBase. Had
 //= issues starting the script after @reloadscript/@loadnpc
 //======================================================================================================
-- script WoEInfoBase -1,{
+-	script	WoEInfoBase	-1,{
 
 OnStartMenu:
 if(.init == 0)
@@ -506,7 +506,7 @@ set .@k, .@k + 1;
 }
 end;
 }
-prontera,147,174,4 script WoE Info 837,{
+prontera,147,174,4	script	WoE Info	837,{
 if(getwaitingroomstate(3, strnpcinfo(3)) == -1)
 donpcevent strnpcinfo(3)+"::OnInit";
 
@@ -535,7 +535,7 @@ phtownall,203,192,3 duplicate(WoE Info) WoE Info#2winfo 835
 //using the trunk version will result in catastrophic failure of the script. Double declaration of the following
 //functions fixes this (you will get warning messages though)
 
-function script WoEToggler { // = 0|1
+function	script	WoEToggler	{ // = 0|1
 if(getarg(0)) {
 AgitStart;
 } else {
@@ -545,7 +545,7 @@ return;
 }
 
 //if stable script will fail parsing this function, but the rest of the script will still be usable
-function script WoEToggler { // = 0|1
+function	script	WoEToggler	{ // = 0|1
 if(getarg(0)) {
 AgitStart;
 AgitStart2;

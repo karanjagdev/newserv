@@ -1,7 +1,7 @@
 //-------Tara RO Script------//
 //------Author: Karan Jagdev--//
 //---fb.com/karan.jagdev----//
-
+/**
 prontera,147,171,4	script	PVP Warper	106,{
 if (!(agitcheck() || agitcheck2())){
 mes "Please choose your preferred battle yard...!";
@@ -39,7 +39,7 @@ if(strcharinfo(3) == "guild_vs5") {
 	end;
 }
 }
-
+**/
 //-------Tara RO Script------//
 //------Author: Karan Jagdev--//
 //---fb.com/karan.jagdev----//
