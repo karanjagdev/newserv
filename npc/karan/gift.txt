@@ -1,0 +1,18 @@
+-	script	newlog	-1,{
+OnPCLoginEvent:
+	if(Class == 0 || Class == 4001)	{
+	mes "Welcome to Barba Ragnarok Online!!";
+	mes "We appritiate your stay and want to give you with a warm welcome reward.";
+	next;
+	mes "Would you like to have your welcome package now?";
+	if(select("Yes", "No") == 1) goto B_item;
+	}
+	close;
+	
+B_item:
+mes "There you go!";
+getitembound 1084,30,4;
+getitembound 7059,30,4;
+getitembound 12221,30,4;
+close;
+}
