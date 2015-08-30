@@ -111,10 +111,10 @@ set .@castle_check, getd(.@woe_state_array$ + "[" + .@i + "]");
 while(.@castle_check && .@k < .num_castles[.@i]) {
 if(.@castle_check & (1 << .@k)) {
 set .@map$, getd(.@castles$+"["+.@k+"]");
-if (GetCastleData(.@map$,1)) {
-dispbottom "The [" + GetCastleName(.@map$) + "] castle of the [" + .region_names$[.@i] + "] region is currently held by the [" + GetGuildName(GetCastleData(.@map$,1)) + "] guild.";
+if (getcastledata(.@map$,1)) {
+dispbottom "The [" + getcastlename(.@map$) + "] castle of the [" + .region_names$[.@i] + "] region is currently held by the [" + getguildname(getcastledata(.@map$,1)) + "] guild.";
 } else {
-dispbottom "The [" + GetCastleName(.@map$) + "] castle of the [" + .region_names$[.@i] + "] region is currently unoccupied.";
+dispbottom "The [" + getcastlename(.@map$) + "] castle of the [" + .region_names$[.@i] + "] region is currently unoccupied.";
 }
 set .@castle_check, .@castle_check - (1 << .@k);
 }
@@ -324,7 +324,7 @@ set .@j, 0;
 set .@output$, "";
 while(.@j < .num_castles[.@k]) {
 if(.@castle_check & (1 << .@j)) {
-set .@output$, .@output$ + GetCastleName(getd(.@castles$+"["+.@j+"]"));
+set .@output$, .@output$ + getcastlename(getd(.@castles$+"["+.@j+"]"));
 set .@castle_check, .@castle_check - (1 << .@j);
 if(.@castle_check) {
 if(.@output$ != "")
@@ -443,9 +443,9 @@ set .@region, getd(".loadmap_region_" + .@map$) - 1;
 if(.@region >= 0) {
 set .@castleIndex, getd(".loadmap_castleIndex_" + .@map$);
 if(getd(".woe_state_" + .woe_state[.woe_index] + "[" + .@region + "]") & 1 << .@castleIndex)
-dispbottom "The [" + GetCastleName(.@map$) + "] castle is available for conquering during this WoE session";
+dispbottom "The [" + getcastlename(.@map$) + "] castle is available for conquering during this WoE session";
 else
-dispbottom "The [" + GetCastleName(.@map$) + "] castle is NOT available for conquering during this WoE session";
+dispbottom "The [" + getcastlename(.@map$) + "] castle is NOT available for conquering during this WoE session";
 }
 }
 end;
@@ -494,10 +494,10 @@ set .@castles$, ".castles_" + .regions$[.@i] + "$";
 while(.@castle_check && .@k < .num_castles[.@i]) {
 if(.@castle_check & (1 << .@k)) {
 set .@map$, getd(.@castles$+"["+.@k+"]");
-if (GetCastleData(.@map$,1)) {
-announce "The [" + GetCastleName(.@map$) + "] castle of the [" + .region_names$[.@i] + "] region is currently held by the [" + GetGuildName(GetCastleData(.@map$,1)) + "] guild.",bc_all;
+if (getcastledata(.@map$,1)) {
+announce "The [" + getcastlename(.@map$) + "] castle of the [" + .region_names$[.@i] + "] region is currently held by the [" + getguildname(getcastledata(.@map$,1)) + "] guild.",bc_all;
 } else {
-announce "The [" + GetCastleName(.@map$) + "] castle of the [" + .region_names$[.@i] + "] region is currently unoccupied.",bc_all;
+announce "The [" + getcastlename(.@map$) + "] castle of the [" + .region_names$[.@i] + "] region is currently unoccupied.",bc_all;
 }
 set .@castle_check, .@castle_check - (1 << .@k);
 }
@@ -527,7 +527,7 @@ end;
 }
 
 //zomg! it duplicates!!
-phtownall,203,192,3 duplicate(WoE Info) WoE Info#2winfo 835
+//phtownall,203,192,3 duplicate(WoE Info) WoE Info#2winfo 835
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -537,9 +537,9 @@ phtownall,203,192,3 duplicate(WoE Info) WoE Info#2winfo 835
 
 function	script	WoEToggler	{ // = 0|1
 if(getarg(0)) {
-AgitStart;
+agitstart;
 } else {
-AgitEnd;
+agitend;
 }
 return;
 }
@@ -547,11 +547,11 @@ return;
 //if stable script will fail parsing this function, but the rest of the script will still be usable
 function	script	WoEToggler	{ // = 0|1
 if(getarg(0)) {
-AgitStart;
-AgitStart2;
+agitstart;
+agitstart2;
 } else {
-AgitEnd;
-AgitEnd2;
+agitend;
+agitend2;
 }
 return;
 }
