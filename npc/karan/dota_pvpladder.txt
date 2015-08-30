@@ -36,7 +36,7 @@ OnInit:
 	** ****************************************************************************************/
 	
 	/* ==================	Sound Effects	===================================================/
-	*-	soundeffect : 0 - disable, 1 - play soundeffect to all players on map, 
+	*-	soundeffect : 1 - disable, 1 - play soundeffect to all players on map, 
 	*-	2 - play soundeffect to an area around the killer, 3 - play soundeffect to killer only
 	*-	======================================================================================*/
 	set .sound, 1;
