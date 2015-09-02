@@ -1,7 +1,7 @@
 //-----------BarbaRagnarok----------------//
 //-----------Author : Karan Jagdev--------//
 //-----------Fb.com/karan.jagdev--------//
-prontera,164,171,4	script	Maya	608,{
+prontera,164,171,4	script	Maya	611,{
 
 mes "Hello! Please select the service you like me to do for you!";
 next;
