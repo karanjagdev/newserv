@@ -375,7 +375,7 @@ prontera,164,174,4	script	Refiner	1_M_SMITH,{
 		.DisplayRefineInfo = true;		// Should NPC display information about 
 									// refine (such as success chance)
 									
-		.UseSecureItems = false;		// Enables the use of items to protect 
+		.UseSecureItems = true;		// Enables the use of items to protect 
 									// from fails (see .SecureItems array)
 									
 		.UseChanceItems = true;		// Enables the use of items that increase 
