@@ -1,0 +1,29 @@
+//-----------BarbaRagnarok----------------//
+//-----------Author : Karan Jagdev--------//
+//-----------Fb.com/karan.jagdev--------//
+prontera,164,171,4	script	Maya	608,{
+
+mes "Hello! Please select the service you like me to do for you!";
+next;
+mes "Please make sure you have magical stone.";
+mes "I would need it to perform my magic";
+next;
+menu "Reset Skill",G_skill,"Reset Status",G_stat,"Nothing",exit;
+
+G_skill:
+if(countitem(6320)<1) goto L_go;
+mes "Very well here you go!";
+resetskill;
+delitem 6320,1;
+close;
+G_stat:
+if(countitem(6320)<1) goto L_go;
+mes "Very well here you go!";
+resetstatus;
+delitem 6320,1;
+close;
+L_go:
+mes "Don't Waste my time you little punk!";
+close;
+}
+
