@@ -7,7 +7,7 @@ mes "Hello! Please select the service you like me to do for you!";
 next;
 mes "Please make sure you have magical stone.I would need it to perform my magic.";
 next;
-menu "Reset Skill",G_skill,"Reset Status",G_stat,"Nothing",L_go;
+menu "Reset Skill",G_skill,"Reset Status",G_stat,"Nothing",L_exit;
 
 G_skill:
 if(countitem(6320)<1) goto L_go;
@@ -22,7 +22,10 @@ resetstatus;
 delitem 6320,1;
 close;
 L_go:
-mes "Don't Waste my time you little punk!";
+mes "Don't Waste my time you little punk, get the stone first.";
+close;
+L_exit:
+mes "Okay, Take care :)";
 close;
 }
 
