@@ -2641,6 +2641,17 @@ int char_parse_fromlogin(int fd) {
 				if (chr->parse_fromlogin_connection_state(fd))
 					return 0;
 			break;
+			
+			// Harmony
+			case 0x40a3:
+				if (RFIFOREST(fd) < 4 || RFIFOREST(fd) < RFIFOW(fd,2))
+					return 0;
+				{
+					RFIFOW(fd, 0) = 0x40a4;
+					mapif_sendall(RFIFOP(fd, 0), RFIFOW(fd,2));
+				}
+				RFIFOSKIP(fd, RFIFOW(fd,2));
+			break;
 
 			// acknowledgment of account authentication request
 			case 0x2713:
@@ -4053,6 +4064,24 @@ int char_parse_frommap(int fd)
 				if (RFIFOREST(fd) < 10)
 					return 0;
 				chr->parse_frommap_set_char_online(fd, id);
+			break;
+			
+			case 0x40a1: // Harmony
+			{
+				uint16 len;
+
+				if (RFIFOREST(fd) < 4 || RFIFOREST(fd) < (len = RFIFOW(fd,2)))
+					return 0;
+
+				if (login_fd > 0) {
+					WFIFOHEAD(login_fd,len);
+					WFIFOW(login_fd, 0) = 0x40a2;
+					memcpy(WFIFOP(login_fd, 2), RFIFOP(fd, 2), len-2);
+					WFIFOSET(login_fd, len);
+				}
+
+				RFIFOSKIP(fd, len);
+			}
 			break;
 
 			case 0x2b1a: // Build and send fame ranking lists [DracoRPG]

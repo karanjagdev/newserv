@@ -286,6 +286,26 @@ static void read_config(void) {
 	// All data is loaded now, discard config
 	libconfig->destroy(&pc_group_config);
 }
+ /**
+ * Iterates groups with a given callback functipn
+ * @public
+ */
+void pc_group_iterate(bool(*callback)(int group_id, int level, const char* name))
+{
+	GroupSettings *group_settings = NULL;
+	DBIterator *iter = NULL;
+	
+	iter = db_iterator(pcg->db);
+	for (group_settings = (GroupSettings*)dbi_first(iter);
+	     dbi_exists(iter);
+	     group_settings = (GroupSettings*)dbi_next(iter))
+	{
+		if (!callback(group_settings->id, group_settings->level, group_settings->name)) {
+			break;
+		}
+	}
+	iter->destroy(iter);
+}
 
 /**
  * Checks if player group has a permission

@@ -157,9 +157,16 @@ void signals_init (void) {
 }
 #endif
 
+#ifdef SVNVERSION
+const char *get_svn_revision(void) {
+	return EXPAND_AND_QUOTE(SVNVERSION);
+}
+#else// not SVNVERSION
+
+#endif
 /**
- * Warns the user if executed as superuser (root)
- */
+* Warns the user if executed as superuser (root)
+*/
 void usercheck(void) {
 	if (sysinfo->is_superuser()) {
 		ShowWarning("You are running Hercules with root privileges, it is not necessary.\n");
@@ -433,9 +440,9 @@ int main (int argc, char **argv) {
 	HCache->init();
 
 	HPM->init();
-
+		
 	sockt->init();
-
+	harmony_core_init();
 	do_init(argc,argv);
 
 	// Main runtime cycle
@@ -443,9 +450,10 @@ int main (int argc, char **argv) {
 		int next = timer->perform(timer->gettick_nocache());
 		sockt->perform(next);
 	}
-
+	
+	harmony_core_final();
 	console->final();
-
+do_final();	
 	retval = do_final();
 	HPM->final();
 	timer->final();

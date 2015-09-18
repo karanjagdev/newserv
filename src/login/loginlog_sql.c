@@ -77,8 +77,8 @@ void login_log(uint32 ip, const char* username, int rcode, const char* message)
 	SQL->EscapeStringLen(sql_handle, esc_message, message, strnlen(message, 255));
 
 	retcode = SQL->Query(sql_handle,
-		"INSERT INTO `%s`(`time`,`ip`,`user`,`rcode`,`log`) VALUES (NOW(), '%s', '%s', '%d', '%s')",
-		log_login_db, ip2str(ip,NULL), esc_username, rcode, esc_message);
+		"INSERT INTO `%s`(`time`,`ip`,`user`,`rcode`,`log`,`mac`) VALUES (NOW(), '%s', '%s', '%d', '%s', '%s')",
+		log_login_db, ip2str(ip,NULL), esc_username, rcode, esc_message, mac);
 
 	if( retcode != SQL_SUCCESS )
 		Sql_ShowDebug(sql_handle);

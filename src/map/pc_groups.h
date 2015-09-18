@@ -9,6 +9,8 @@
 #include "common/conf.h"
 #include "common/db.h"
 
+void pc_group_iterate(bool(*callback)(int group_id, int level, const char* name));
+
 /// PC permissions
 enum e_pc_permission {
 	PC_PERM_NONE                = 0,        //  #0

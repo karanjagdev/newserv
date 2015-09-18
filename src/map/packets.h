@@ -21,6 +21,8 @@
  * - packet(packet_id,length,function,offset ( specifies the offset of a packet field in bytes from the begin of the packet ),...)
  * - Example: packet(0x0072,19,clif->pWantToConnection,2,6,10,14,18);
  */
+ 
+#include "harmony_packets_hercules.inc"
 
 packet(0x0064,55);
 packet(0x0065,17);

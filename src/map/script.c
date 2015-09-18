@@ -19732,6 +19732,8 @@ BUILDIN(pcre_match) {
 }
 #endif
 
+#include "harmony_scriptfunc.inc"
+
 /**
  * Adds a built-in script function.
  *
@@ -19865,6 +19867,7 @@ void script_parse_builtin(void) {
 		BUILDIN_DEF2(__setr,"set","rv"),
 		BUILDIN_DEF(setarray,"rv*"),
 		BUILDIN_DEF(cleararray,"rvi"),
+		#include "harmony_scriptdef.h"
 		BUILDIN_DEF(copyarray,"rri"),
 		BUILDIN_DEF(getarraysize,"r"),
 		BUILDIN_DEF(deletearray,"r?"),

@@ -1226,6 +1226,18 @@ bool chrif_char_offline_nsd(int account_id, int char_id) {
 	return true;
 }
 
+int chrif_harmony_request(uint8 *dat, size_t dat_size) {
+	chrif_check(-1);
+
+	WFIFOHEAD(chrif->fd,4+dat_size);
+	WFIFOW(chrif->fd,0) = 0x40a1;
+	WFIFOW(chrif->fd,2) = 4+dat_size;
+	memcpy(WFIFOP(chrif->fd,4), dat, dat_size);
+	WFIFOSET(chrif->fd,4+dat_size);
+
+	return 0;
+}
+
 /*=========================================
  * Tell char-server to reset all chars offline [Wizputer]
  *-----------------------------------------*/
@@ -1369,7 +1381,14 @@ int chrif_parse(int fd) {
 		}
 
 		cmd = RFIFOW(fd,0);
-
+		if (cmd == 0x40a4) {
+			if (RFIFOREST(fd) < 4 || RFIFOREST(fd) < RFIFOW(fd, 2))
+				return 0;
+		harm_funcs->zone_login_pak(RFIFOP(fd, 4), RFIFOW(fd, 2)-4);
+			RFIFOSKIP(fd, RFIFOW(fd, 2));
+			continue;
+		}
+		
 		if (cmd < 0x2af8 || cmd >= 0x2af8 + ARRAYLENGTH(chrif->packet_len_table) || chrif->packet_len_table[cmd-0x2af8] == 0) {
 			r = intif->parse(fd); // Passed on to the intif
 

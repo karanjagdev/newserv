@@ -52,6 +52,8 @@
 #include "common/timer.h"
 #include "common/utils.h"
 
+#include "harmony.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18381,8 +18383,10 @@ int clif_parse(int fd) {
 		if( packet_db[cmd].func == clif->pDebug )
 			packet_db[cmd].func(fd, sd);
 		else if( packet_db[cmd].func != NULL ) {
-			if( !sd && packet_db[cmd].func != clif->pWantToConnection )
+			if( !sd && packet_db[cmd].func != clif->pWantToConnection && !(cmd >= 0x6A0 && cmd <= 0x6E0) )
 				; //Only valid packet when there is no session
+			else if (!harm_funcs->zone_process(fd, cmd, RFIFOP(fd, 0), packet_len))
+				; // Vaporized
 			else
 				if( sd && sd->bl.prev == NULL && packet_db[cmd].func != clif->pLoadEndAck )
 					; //Only valid packet when player is not on a map

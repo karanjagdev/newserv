@@ -83,6 +83,7 @@ struct socket_data {
 	} flag;
 
 	uint32 client_addr; // remote client address
+	void *harm_sd;
 
 	uint8 *rdata, *wdata;
 	size_t max_rdata, max_wdata;
