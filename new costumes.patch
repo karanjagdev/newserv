@@ -1,0 +1,119 @@
+Index: db/const.txt
+===================================================================
+--- db/const.txt	(revision 13717)
++++ db/const.txt	(working copy)
+@@ -1258,6 +1258,8 @@
+ SC_MOONSTAR	571
+ SC_SUPER_STAR	572
+ SC_OKTOBERFEST	573
++SC_STRANGELIGHTS	574
++SC_DECORATION_OF_MUSIC	575
+ 
+ e_gasp	0
+ e_what	1
+Index: db/re/item_db.conf
+===================================================================
+--- db/re/item_db.conf	(revision 13717)
++++ db/re/item_db.conf	(working copy)
+@@ -96593,6 +96593,18 @@
+ 	View: 879
+ },
+ {
++	Id: 18741
++	AegisName: "C_WillOWisp_Accessory"
++	Name: "Will O Wisp"
++	Type: 5
++	Buy: 20
++	Loc: 1024
++	Refine: false
++	View: 880
++	OnEquipScript: <" sc_start SC_STRANGELIGHTS,-1,0; ">
++	OnUnequipScript: <" sc_end SC_STRANGELIGHTS; ">
++},
++{
+ 	Id: 18742
+ 	AegisName: "C_MoonStar_Accessory"
+ 	Name: "Moon and Stars"
+@@ -98285,4 +98297,16 @@
+ 	Upper: 63
+ 	Script: <" itemskill RK_LUXANIMA,1; ">
+ },
++{
++	Id: 19871
++	AegisName: "C_DecorationOfMusic_Accessory"
++	Name: "Decoration of Music"
++	Type: 5
++	Buy: 20
++	Loc: 2048
++	Refine: false
++	View: 1074
++	OnEquipScript: <" sc_start SC_DECORATION_OF_MUSIC,-1,0; ">
++	OnUnequipScript: <" sc_end SC_DECORATION_OF_MUSIC; ">
++},
+ )
+Index: db/sc_config.txt
+===================================================================
+--- db/sc_config.txt	(revision 13717)
++++ db/sc_config.txt	(working copy)
+@@ -423,6 +423,8 @@
+ SC_PUSH_CART, 205
+ SC_MOONSTAR, 207
+ SC_SUPER_STAR, 207
++SC_STRANGELIGHTS, 207
++SC_DECORATION_OF_MUSIC, 207
+ 
+ //Cant Clear
+ SC_ALL_RIDING, 128
+\ No newline at end of file
+Index: src/map/status.c
+===================================================================
+--- src/map/status.c	(revision 13717)
++++ src/map/status.c	(working copy)
+@@ -908,6 +908,8 @@
+ 	status->IconChangeTable[SC_MONSTER_TRANSFORM] = SI_MONSTER_TRANSFORM;
+ 	status->IconChangeTable[SC_MOONSTAR] = SI_MOONSTAR;
+ 	status->IconChangeTable[SC_SUPER_STAR] = SI_SUPER_STAR;
++	status->IconChangeTable[SC_STRANGELIGHTS] = SI_STRANGELIGHTS;
++	status->IconChangeTable[SC_DECORATION_OF_MUSIC] = SI_DECORATION_OF_MUSIC;
+ 
+ 	//Other SC which are not necessarily associated to skills.
+ 	status->ChangeFlagTable[SC_ATTHASTE_POTION1] = SCB_ASPD;
+@@ -999,6 +1001,8 @@
+ 
+ 	status->ChangeFlagTable[SC_MOONSTAR] |= SCB_NONE;
+ 	status->ChangeFlagTable[SC_SUPER_STAR] |= SCB_NONE;
++	status->ChangeFlagTable[SC_STRANGELIGHTS] |= SCB_NONE;
++	status->ChangeFlagTable[SC_DECORATION_OF_MUSIC] |= SCB_NONE;
+ 
+ 	/* status->DisplayType Table [Ind/Hercules] */
+ 	status->DisplayType[SC_ALL_RIDING]		= true;
+@@ -1026,6 +1030,8 @@
+ 	status->DisplayType[SC_MONSTER_TRANSFORM] = true;
+ 	status->DisplayType[SC_MOONSTAR]		= true;
+ 	status->DisplayType[SC_SUPER_STAR]		= true;
++	status->DisplayType[SC_STRANGELIGHTS]		= true;
++	status->DisplayType[SC_DECORATION_OF_MUSIC]		= true;
+ 
+ #ifdef RENEWAL_EDP
+ 	// renewal EDP increases your weapon atk
+Index: src/map/status.h
+===================================================================
+--- src/map/status.h	(revision 13717)
++++ src/map/status.h	(working copy)
+@@ -697,6 +697,8 @@
+ 	SC_SUPER_STAR,
+ 
+ 	SC_OKTOBERFEST,
++	SC_STRANGELIGHTS,
++	SC_DECORATION_OF_MUSIC,
+ 	
+ 	SC_MAX, //Automatically updated max, used in for's to check we are within bounds.
+ } sc_type;
+@@ -1458,6 +1460,7 @@
+ 	SI_PACKING_ENVELOPE10 = 775,
+ 	SI_GLASTHEIM_TRANS = 776,
+ 	SI_HEAT_BARREL_AFTER = 778,
++	SI_DECORATION_OF_MUSIC = 779,
+ 	SI_MAX,
+ };
+ // JOINTBEAT stackable ailments

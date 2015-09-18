@@ -128,6 +128,10 @@ bool HPM_map_grabHPData(struct HPDataOperationStorage *ret, enum HPluginDataType
 			ret->HPDataSRCPtr = (void**)(&((struct battleground_data *)ptr)->hdata);
 			ret->hdatac = &((struct battleground_data *)ptr)->hdatac;
 			break;
+		case HPDT_AUTOTRADE_VEND:
+			ret->HPDataSRCPtr = (void**)(&((struct autotrade_vending *)ptr)->hdata);
+			ret->hdatac = &((struct autotrade_vending *)ptr)->hdatac;
+			break;
 		default:
 			return false;
 	}
@@ -135,9 +139,10 @@ bool HPM_map_grabHPData(struct HPDataOperationStorage *ret, enum HPluginDataType
 }
 
 void HPM_map_plugin_load_sub(struct hplugin *plugin) {
-	plugin->hpi->addCommand       = HPM->import_symbol("addCommand",plugin->idx);
-	plugin->hpi->addScript        = HPM->import_symbol("addScript",plugin->idx);
-	plugin->hpi->addPCGPermission = HPM->import_symbol("addGroupPermission",plugin->idx);
+	plugin->hpi->sql_handle = map->mysql_handle;
+	plugin->hpi->addCommand = atcommand->create;
+	plugin->hpi->addScript  = script->addScript;
+	plugin->hpi->addPCGPermission = HPM_map_add_group_permission;
 }
 
 bool HPM_map_add_atcommand(char *name, AtCommandFunc func) {
@@ -185,6 +190,7 @@ void HPM_map_do_init(void) {
 	HPM->load_sub = HPM_map_plugin_load_sub;
 	HPM->grabHPDataSub = HPM_map_grabHPData;
 	HPM->datacheck_init(HPMDataCheck, HPMDataCheckLen, HPMDataCheckVer);
+	HPM_shared_symbols(SERVER_TYPE_MAP);
 }
 
 void HPM_map_do_final(void) {

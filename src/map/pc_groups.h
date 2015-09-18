@@ -5,11 +5,9 @@
 #ifndef MAP_PC_GROUPS_H
 #define MAP_PC_GROUPS_H
 
-#include "common/cbasetypes.h"
+#include "common/hercules.h"
 #include "common/conf.h"
 #include "common/db.h"
-
-void pc_group_iterate(bool(*callback)(int group_id, int level, const char* name));
 
 /// PC permissions
 enum e_pc_permission {
@@ -98,10 +96,10 @@ struct pc_groups_interface {
 	int (*get_idx) (GroupSettings *group);
 };
 
-struct pc_groups_interface *pcg;
-
 #ifdef HERCULES_CORE
 void pc_groups_defaults(void);
 #endif // HERCULES_CORE
+
+HPShared struct pc_groups_interface *pcg;
 
 #endif /* MAP_PC_GROUPS_H */

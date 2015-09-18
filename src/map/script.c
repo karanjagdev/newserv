@@ -62,6 +62,7 @@
 #endif
 
 struct script_interface script_s;
+struct script_interface *script;
 
 static inline int GETVALUE(const unsigned char* buf, int i) {
 	return (int)MakeDWord(MakeWord(buf[i], buf[i+1]), MakeWord(buf[i+2], 0));
@@ -4035,7 +4036,7 @@ int run_func(struct script_state *st)
 /*==========================================
  * script execution
  *------------------------------------------*/
-void run_script(struct script_code *rootscript,int pos,int rid,int oid) {
+void run_script(struct script_code *rootscript, int pos, int rid, int oid) {
 	struct script_state *st;
 
 	if( rootscript == NULL || pos < 0 )
@@ -4718,6 +4719,7 @@ void script_load_translations(void) {
 		
 		script->load_translation(translation_file, ++lang_id, &total);
 	}
+	libconfig->destroy(&translations_conf);
 
 	if( total ) {
 		DBIterator *main_iter;
@@ -5763,6 +5765,7 @@ BUILDIN(warp)
 {
 	int ret;
 	int x,y;
+	int warp_clean = 1;
 	const char* str;
 	TBL_PC* sd;
 
@@ -5774,6 +5777,11 @@ BUILDIN(warp)
 	x = script_getnum(st,3);
 	y = script_getnum(st,4);
 
+	if (script_hasdata(st, 5)) {
+		warp_clean = script_getnum(st, 5);
+	}
+
+	sd->state.warp_clean = warp_clean;
 	if(strcmp(str,"Random")==0)
 		ret = pc->randomwarp(sd,CLR_TELEPORT);
 	else if(strcmp(str,"SavePoint")==0 || strcmp(str,"Save")==0)
@@ -10447,7 +10455,7 @@ BUILDIN(itemeffect) {
 		}
 	}
 
-	script->run( item_data->script, 0, sd->bl.id, nd->bl.id );
+	script->run_use_script(sd, item_data, nd->bl.id);
 
 	return true;
 }
@@ -11413,6 +11421,10 @@ BUILDIN(disablewaitingroomevent) {
 /// <type>=16 : the name of the waiting room event
 /// <type>=32 : if the waiting room is full
 /// <type>=33 : if there are enough users to trigger the event
+/// -- Custom Added
+/// <type>=34 : minimum player of waiting room
+/// <type>=35 : maximum player of waiting room
+/// <type>=36 : minimum zeny required
 ///
 /// getwaitingroomstate(<type>,"<npc_name>") -> <info>
 /// getwaitingroomstate(<type>) -> <info>
@@ -11420,6 +11432,7 @@ BUILDIN(getwaitingroomstate) {
 	struct npc_data *nd;
 	struct chat_data *cd;
 	int type;
+	int i;
 
 	type = script_getnum(st,2);
 	if( script_hasdata(st,3) )
@@ -11433,7 +11446,13 @@ BUILDIN(getwaitingroomstate) {
 	}
 
 	switch(type) {
-		case 0:  script_pushint(st, cd->users); break;
+		case 0:  
+			for (i = 0; i < cd->users; i++) {
+				struct map_session_data *sd = cd->usersd[i];
+				mapreg->setreg(reference_uid(script->add_str("$@chatmembers"), i), sd->bl.id);
+			}
+			script_pushint(st, cd->users);
+			break;
 		case 1:  script_pushint(st, cd->limit); break;
 		case 2:  script_pushint(st, cd->trigger&0x7f); break;
 		case 3:  script_pushint(st, ((cd->trigger&0x80)!=0)); break;
@@ -11442,6 +11461,10 @@ BUILDIN(getwaitingroomstate) {
 		case 16: script_pushstrcopy(st, cd->npc_event);break;
 		case 32: script_pushint(st, (cd->users >= cd->limit)); break;
 		case 33: script_pushint(st, (cd->users >= cd->trigger)); break;
+
+		case 34: script_pushint(st, cd->minLvl); break;
+		case 35: script_pushint(st, cd->maxLvl); break;
+		case 36: script_pushint(st, cd->zeny); break;
 		default: script_pushint(st, -1); break;
 	}
 	return true;
@@ -13799,11 +13822,19 @@ BUILDIN(message) {
 
 /*==========================================
  * npctalk (sends message to surrounding area)
+ * usage: npctalk "<message>"{,"<npc name>"};
  *------------------------------------------*/
 BUILDIN(npctalk)
 {
-	struct npc_data* nd = (struct npc_data *)map->id2bl(st->oid);
+	struct npc_data* nd;
 	const char *str = script_getstr(st,2);
+
+	if (script_hasdata(st, 3)) {
+		nd = npc->name2id(script_getstr(st, 3));
+	}
+	else {
+		nd = (struct npc_data *)map->id2bl(st->oid);
+	}
 
 	if (nd) {
 		char name[NAME_LENGTH], message[256];
@@ -18259,22 +18290,22 @@ BUILDIN(getcharip) {
 	}
 
 	/* check for sd and IP */
-	if (!sd || !session[sd->fd]->client_addr)
+	if (!sd || !sockt->session[sd->fd]->client_addr)
 	{
 		script_pushconststr(st, "");
 		return true;
 	}
 
 	/* return the client ip_addr converted for output */
-	if (sd && sd->fd && session[sd->fd])
+	if (sd && sd->fd && sockt->session[sd->fd])
 	{
 		/* initiliaze */
 		const char *ip_addr = NULL;
 		uint32 ip;
 
 		/* set ip, ip_addr and convert to ip and push str */
-		ip = session[sd->fd]->client_addr;
-		ip_addr = ip2str(ip, NULL);
+		ip = sockt->session[sd->fd]->client_addr;
+		ip_addr = sockt->ip2str(ip, NULL);
 		script_pushstrcopy(st, ip_addr);
 	}
 
@@ -19084,7 +19115,7 @@ BUILDIN(qiget) {
 	if( idx < 0 || idx >= script->hqis ) {
 		ShowWarning("buildin_qiget: unknown queue iterator id %d\n",idx);
 		script_pushint(st, 0);
-	} else if ( script->hqi[idx].pos -1 == script->hqi[idx].items ) {
+	} else if (script->hqi[idx].pos >= script->hqi[idx].items) {
 		script_pushint(st, 0);
 	} else {
 		struct hQueueIterator *it = &script->hqi[idx];
@@ -19101,7 +19132,7 @@ BUILDIN(qicheck) {
 	if( idx < 0 || idx >= script->hqis ) {
 		ShowWarning("buildin_qicheck: unknown queue iterator id %d\n",idx);
 		script_pushint(st, 0);
-	} else if ( script->hqi[idx].pos -1 == script->hqi[idx].items ) {
+	} else if (script->hqi[idx].pos >= script->hqi[idx].items) {
 		script_pushint(st, 0);
 	} else {
 		script_pushint(st, 1);
@@ -19732,8 +19763,6 @@ BUILDIN(pcre_match) {
 }
 #endif
 
-#include "harmony_scriptfunc.inc"
-
 /**
  * Adds a built-in script function.
  *
@@ -19830,6 +19859,54 @@ bool script_hp_add(char *name, char *args, bool (*func)(struct script_state *st)
 	return script->add_builtin(&buildin, true);
 }
 
+void script_run_use_script(struct map_session_data *sd, struct item_data *data, int oid) __attribute__((nonnull (1)));
+
+/**
+ * Run use script for item.
+ *
+ * @param sd    player session data. Must be correct and checked before.
+ * @param n     item index in inventory. Must be correct and checked before.
+ * @param oid   npc id. Can be also 0 or fake npc id.
+ */
+void script_run_use_script(struct map_session_data *sd, struct item_data *data, int oid)
+{
+	script->current_item_id = data->nameid;
+	script->run(data->script, 0, sd->bl.id, oid);
+	script->current_item_id = 0;
+}
+
+void script_run_item_equip_script(struct map_session_data *sd, struct item_data *data, int oid) __attribute__((nonnull (1, 2)));
+
+/**
+ * Run item equip script for item.
+ *
+ * @param sd    player session data. Must be correct and checked before.
+ * @param data  equipped item data. Must be correct and checked before.
+ * @param oid   npc id. Can be also 0 or fake npc id.
+ */
+void script_run_item_equip_script(struct map_session_data *sd, struct item_data *data, int oid)
+{
+	script->current_item_id = data->nameid;
+	script->run(data->equip_script, 0, sd->bl.id, oid);
+	script->current_item_id = 0;
+}
+
+void script_run_item_unequip_script(struct map_session_data *sd, struct item_data *data, int oid) __attribute__((nonnull (1, 2)));
+
+/**
+ * Run item unequip script for item.
+ *
+ * @param sd    player session data. Must be correct and checked before.
+ * @param data  unequipped item data. Must be correct and checked before.
+ * @param oid   npc id. Can be also 0 or fake npc id.
+ */
+void script_run_item_unequip_script(struct map_session_data *sd, struct item_data *data, int oid)
+{
+	script->current_item_id = data->nameid;
+	script->run(data->unequip_script, 0, sd->bl.id, oid);
+	script->current_item_id = 0;
+}
+
 #define BUILDIN_DEF(x,args) { buildin_ ## x , #x , args, false }
 #define BUILDIN_DEF2(x,x2,args) { buildin_ ## x , x2 , args, false }
 #define BUILDIN_DEF_DEPRECATED(x,args) { buildin_ ## x , #x , args, true }
@@ -19857,7 +19934,7 @@ void script_parse_builtin(void) {
 		BUILDIN_DEF(jobchange,"i?"),
 		BUILDIN_DEF(jobname,"i"),
 		BUILDIN_DEF(input,"r??"),
-		BUILDIN_DEF(warp,"sii"),
+		BUILDIN_DEF(warp,"sii?"),
 		BUILDIN_DEF(areawarp,"siiiisii??"),
 		BUILDIN_DEF(warpchar,"siii"), // [LuzZza]
 		BUILDIN_DEF(warpparty,"siii?"), // [Fredzilla] [Paradox924X]
@@ -19867,7 +19944,6 @@ void script_parse_builtin(void) {
 		BUILDIN_DEF2(__setr,"set","rv"),
 		BUILDIN_DEF(setarray,"rv*"),
 		BUILDIN_DEF(cleararray,"rvi"),
-		#include "harmony_scriptdef.h"
 		BUILDIN_DEF(copyarray,"rri"),
 		BUILDIN_DEF(getarraysize,"r"),
 		BUILDIN_DEF(deletearray,"r?"),
@@ -20076,7 +20152,7 @@ void script_parse_builtin(void) {
 		BUILDIN_DEF2(atcommand,"charcommand","s"), // [MouseJstr]
 		BUILDIN_DEF(movenpc,"sii?"), // [MouseJstr]
 		BUILDIN_DEF(message,"ss"), // [MouseJstr]
-		BUILDIN_DEF(npctalk,"s"), // [Valaris]
+		BUILDIN_DEF(npctalk,"s?"), // [Valaris]
 		BUILDIN_DEF(mobcount,"ss"),
 		BUILDIN_DEF(getlook,"i"),
 		BUILDIN_DEF(getsavepoint,"i"),
@@ -20274,7 +20350,6 @@ void script_parse_builtin(void) {
 		BUILDIN_DEF(makerune,"i"),
 		BUILDIN_DEF(hascashmount,""),//[Ind]
 		BUILDIN_DEF(setcashmount,""),//[Ind]
-		BUILDIN_DEF_DEPRECATED(checkre,"i"), // Deprecated 2015-05-08 [Haru]
 		/**
 		 * rAthena and beyond!
 		 **/
@@ -20611,6 +20686,8 @@ void script_defaults(void) {
 	script->get_constant = script_get_constant;
 	script->label_add = script_label_add;
 	script->run = run_script;
+	script->run_npc = run_script;
+	script->run_pet = run_script;
 	script->run_main = run_script_main;
 	script->run_timer = run_script_timer;
 	script->set_var = set_var;
@@ -20776,5 +20853,8 @@ void script_defaults(void) {
 	script->add_language = script_add_language;
 	script->get_translation_file_name = script_get_translation_file_name;
 	script->parser_clean_leftovers = script_parser_clean_leftovers;
-	
+
+	script->run_use_script = script_run_use_script;
+	script->run_item_equip_script = script_run_item_equip_script;
+	script->run_item_unequip_script = script_run_item_unequip_script;
 }

@@ -36,6 +36,7 @@
 #include <string.h>
 
 struct guild_interface guild_s;
+struct guild_interface *guild;
 
 /*==========================================
  * Retrieves and validates the sd pointer for this guild member [Skotlex]
@@ -739,7 +740,7 @@ void guild_member_joined(struct map_session_data *sd)
 		sd->guild = g;
 		
 		if (channel->config->ally && channel->config->ally_autojoin) {
-			channel->join(g->channel, sd, NULL, true);
+			channel->join(g->channel, sd, "", true);
 		}
 
 	}

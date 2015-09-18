@@ -40,12 +40,13 @@
 #include "common/cbasetypes.h"
 #include "common/conf.h"
 #include "common/core.h" // get_svn_revision()
+#include "common/HPM.h"
 #include "common/malloc.h"
 #include "common/mmo.h" // NAME_LENGTH, MAX_CARTS, NEW_CARTS
 #include "common/nullpo.h"
 #include "common/random.h"
 #include "common/showmsg.h"
-#include "common/socket.h" // session[]
+#include "common/socket.h"
 #include "common/strlib.h" // safestrncpy()
 #include "common/sysinfo.h"
 #include "common/timer.h"
@@ -57,6 +58,7 @@
 #include <time.h>
 
 struct pc_interface pc_s;
+struct pc_interface *pc;
 
 //Converts a class to its array index for CLASS_COUNT defined arrays.
 //Note that it does not do a validity check for speed purposes, where parsing
@@ -651,6 +653,7 @@ int pc_setnewpc(struct map_session_data *sd, int account_id, int char_id, int lo
 	sd->canlog_tick  = timer->gettick();
 	//Required to prevent homunculus copuing a base speed of 0.
 	sd->battle_status.speed = sd->base_status.speed = DEFAULT_WALK_SPEED;
+	sd->state.warp_clean = 1;
 	return 0;
 }
 
@@ -1006,7 +1009,7 @@ int pc_isequip(struct map_session_data *sd,int n)
 bool pc_authok(struct map_session_data *sd, int login_id2, time_t expiration_time, int group_id, struct mmo_charstatus *st, bool changing_mapservers) {
 	int i;
 	int64 tick = timer->gettick();
-	uint32 ip = session[sd->fd]->client_addr;
+	uint32 ip = sockt->session[sd->fd]->client_addr;
 
 	sd->login_id2 = login_id2;
 
@@ -1389,7 +1392,7 @@ int pc_calc_skillpoint(struct map_session_data* sd) {
 	for (i = 1; i < MAX_SKILL; i++) {
 		int skill_lv = pc->checkskill2(sd,i);
 		if (skill_lv > 0) {
-			inf2 = skill->db[i].inf2;
+			inf2 = skill->dbs->db[i].inf2;
 			if((!(inf2&INF2_QUEST_SKILL) || battle_config.quest_skill_learn) &&
 				!(inf2&(INF2_WEDDING_SKILL|INF2_SPIRIT_SKILL|INF2_GUILD_SKILL)) //Do not count wedding/link skills. [Skotlex]
 				) {
@@ -1428,7 +1431,7 @@ int pc_calc_skilltree(struct map_session_data *sd)
 			sd->status.skill[i].id = 0; //First clear skills.
 		/* permanent skills that must be re-checked */
 		if( sd->status.skill[i].flag == SKILL_FLAG_PERMANENT ) {
-			switch( skill->db[i].nameid ) {
+			switch( skill->dbs->db[i].nameid ) {
 				case NV_TRICKDEAD:
 					if( (sd->class_&(MAPID_BASEMASK|JOBL_2)) != MAPID_NOVICE ) {
 							sd->status.skill[i].id = 0;
@@ -1447,21 +1450,21 @@ int pc_calc_skilltree(struct map_session_data *sd)
 			sd->status.skill[i].flag = SKILL_FLAG_PERMANENT;
 		}
 
-		if( sd->sc.count && sd->sc.data[SC_SOULLINK] && sd->sc.data[SC_SOULLINK]->val2 == SL_BARDDANCER && skill->db[i].nameid >= DC_HUMMING && skill->db[i].nameid <= DC_SERVICEFORYOU )
+		if( sd->sc.count && sd->sc.data[SC_SOULLINK] && sd->sc.data[SC_SOULLINK]->val2 == SL_BARDDANCER && skill->dbs->db[i].nameid >= DC_HUMMING && skill->dbs->db[i].nameid <= DC_SERVICEFORYOU )
 		{ //Enable Bard/Dancer spirit linked skills.
 			if( sd->status.sex )
 			{ //Link dancer skills to bard.
 				// i can be < 8?
 				if( sd->status.skill[i-8].lv < 10 )
 					continue;
-				sd->status.skill[i].id = skill->db[i].nameid;
+				sd->status.skill[i].id = skill->dbs->db[i].nameid;
 				sd->status.skill[i].lv = sd->status.skill[i-8].lv; // Set the level to the same as the linking skill
 				sd->status.skill[i].flag = SKILL_FLAG_TEMPORARY; // Tag it as a non-savable, non-uppable, bonus skill
 			} else { //Link bard skills to dancer.
 				if( sd->status.skill[i].lv < 10 )
 					continue;
 				// i can be < 8?
-				sd->status.skill[i-8].id = skill->db[i-8].nameid;
+				sd->status.skill[i-8].id = skill->dbs->db[i-8].nameid;
 				sd->status.skill[i-8].lv = sd->status.skill[i].lv; // Set the level to the same as the linking skill
 				sd->status.skill[i-8].flag = SKILL_FLAG_TEMPORARY; // Tag it as a non-savable, non-uppable, bonus skill
 			}
@@ -1470,7 +1473,7 @@ int pc_calc_skilltree(struct map_session_data *sd)
 
 	if( pc_has_permission(sd, PC_PERM_ALL_SKILL) ) {
 		for( i = 0; i < MAX_SKILL; i++ ) {
-			switch(skill->db[i].nameid) {
+			switch(skill->dbs->db[i].nameid) {
 				/**
 				 * Dummy skills must be added here otherwise they'll be displayed in the,
 				 * skill tree and since they have no icons they'll give resource errors
@@ -1493,10 +1496,10 @@ int pc_calc_skilltree(struct map_session_data *sd)
 				default:
 					break;
 			}
-			if( skill->db[i].inf2&(INF2_NPC_SKILL|INF2_GUILD_SKILL) )
+			if( skill->dbs->db[i].inf2&(INF2_NPC_SKILL|INF2_GUILD_SKILL) )
 				continue; //Only skills you can't have are npc/guild ones
-			if( skill->db[i].max > 0 )
-				sd->status.skill[i].id = skill->db[i].nameid;
+			if( skill->dbs->db[i].max > 0 )
+				sd->status.skill[i].id = skill->dbs->db[i].nameid;
 		}
 		return 0;
 	}
@@ -1539,7 +1542,7 @@ int pc_calc_skilltree(struct map_session_data *sd)
 			}
 			if( f ) {
 				int inf2;
-				inf2 = skill->db[idx].inf2;
+				inf2 = skill->dbs->db[idx].inf2;
 				
 				if(!sd->status.skill[idx].lv && (
 					(inf2&INF2_QUEST_SKILL && !battle_config.quest_skill_learn) ||
@@ -1570,7 +1573,7 @@ int pc_calc_skilltree(struct map_session_data *sd)
 
 		for( i = 0; i < MAX_SKILL_TREE && (id = pc->skill_tree[c][i].id) > 0; i++ ) {
 			int idx = pc->skill_tree[c][i].idx;
-			if( (skill->db[idx].inf2&(INF2_QUEST_SKILL|INF2_WEDDING_SKILL)) )
+			if( (skill->dbs->db[idx].inf2&(INF2_QUEST_SKILL|INF2_WEDDING_SKILL)) )
 				continue; //Do not include Quest/Wedding skills.
 
 			if( sd->status.skill[idx].id == 0 ) {
@@ -1640,7 +1643,7 @@ void pc_check_skilltree(struct map_session_data *sd, int skill_id)
 					continue;
 			}
 
-			j = skill->db[idx].inf2;
+			j = skill->dbs->db[idx].inf2;
 			if( !sd->status.skill[idx].lv && (
 				(j&INF2_QUEST_SKILL && !battle_config.quest_skill_learn) ||
 				j&INF2_WEDDING_SKILL ||
@@ -2833,7 +2836,7 @@ int pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 				break;
 			}
 			if ( type2 >= RC_MAX ) {
-				for ( i = RC_FORMLESS; i < RC_MAX; i++ ) {
+				for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 					if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 						 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 						 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -2886,7 +2889,7 @@ int pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 			}
 			if(sd->state.lr_flag != 2) {
 				if (type2 >= RC_MAX ) {
-					for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+					for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 						if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 							 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 							 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -2947,7 +2950,7 @@ int pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 			}
 			if(sd->state.lr_flag != 2){
 				if ( type2 >= RC_MAX ){
-					for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+					for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 						if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 							 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 							 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -3148,7 +3151,7 @@ int pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 			if(sd->state.lr_flag == 2)
 				break;
 			if ( type2 >= RC_MAX ) {
-				for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+				for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 					if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 						 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 						 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -3177,7 +3180,7 @@ int pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 			}
 			if(sd->state.lr_flag != 2){
 				if ( type2 >= RC_MAX ){
-					for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+					for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 						if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 							 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 							 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -3267,23 +3270,17 @@ int pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 				sd->skillblown[i].val = val;
 			}
 			break;
-	#ifndef RENEWAL_CAST
+#ifndef RENEWAL_CAST
 		case SP_VARCASTRATE:
-	#endif
+#endif
 		case SP_CASTRATE:
 			if(sd->state.lr_flag == 2)
 				break;
 			ARR_FIND(0, ARRAYLENGTH(sd->skillcast), i, sd->skillcast[i].id == 0 || sd->skillcast[i].id == type2);
 			if (i == ARRAYLENGTH(sd->skillcast)) {
 				//Better mention this so the array length can be updated. [Skotlex]
-				ShowDebug("script->run: bonus2 %s reached it's limit (%"PRIuS" skills per character), bonus skill %d (+%d%%) lost.\n",
-
-	#ifndef RENEWAL_CAST
-					"bCastRate",
-	#else
-					"bVariableCastrate",
-	#endif
-
+				ShowDebug("script->run: bonus2 %s reached its limit (%"PRIuS" skills per character), bonus skill %d (+%d%%) lost.\n",
+					type == SP_CASTRATE ? "bCastRate" : "bVariableCastrate",
 					ARRAYLENGTH(sd->skillcast), type2, val);
 				break;
 			}
@@ -3366,7 +3363,7 @@ int pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 			}
 			if(sd->state.lr_flag != 2) {
 				if ( type2 >= RC_MAX ){
-					for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+					for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 						if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 							 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 							 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -3387,7 +3384,7 @@ int pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 			}
 			if(sd->state.lr_flag != 2) {
 				if ( type2 >= RC_MAX ){
-					for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+					for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 						if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 							 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 							 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -3423,7 +3420,7 @@ int pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 				break;
 			}
 			if ( type2 >= RC_MAX ){
-				for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+				for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 					if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 						 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 						 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -3452,7 +3449,7 @@ int pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 				break;
 			}
 			if ( type2 >= RC_MAX ){
-				for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+				for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 					if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 						 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 						 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -3490,7 +3487,7 @@ int pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 			}
 			if(sd->state.lr_flag != 2) {
 				if ( type2 >= RC_MAX ) {
-					for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+					for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 						if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 							 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 							 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -3511,7 +3508,7 @@ int pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 			}
 			if(sd->state.lr_flag != 2) {
 				if ( type2 >= RC_MAX ) {
-					for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+					for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 						if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 							 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 							 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -3635,7 +3632,7 @@ int pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 			}
 			if(sd->state.lr_flag != 2) {
 				if ( type2 >= RC_MAX ) {
-					for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+					for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 						if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 							 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 							 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -3714,7 +3711,7 @@ int pc_bonus3(struct map_session_data *sd,int type,int type2,int type3,int val)
 				break;
 			}
 			if ( type2 >= RC_MAX ) {
-				for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+				for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 					if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 						 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 						 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -3747,7 +3744,7 @@ int pc_bonus3(struct map_session_data *sd,int type,int type2,int type3,int val)
 				break;
 			}
 			if ( type2 >= RC_MAX ) {
-				for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+				for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 					if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 						 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 						 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -3887,7 +3884,7 @@ int pc_bonus4(struct map_session_data *sd,int type,int type2,int type3,int type4
 		if(sd->state.lr_flag == 2)
 			break;
 		if ( type2 >= RC_MAX ) {
-			for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+			for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 				if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 	 				 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 	 				 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -3913,7 +3910,7 @@ int pc_bonus4(struct map_session_data *sd,int type,int type2,int type3,int type4
 		if(sd->state.lr_flag == 2)
 			break;
 		if ( type2 >= RC_MAX ) {
-			for ( i = RC_FORMLESS; i < RC_MAX; i++ ){
+			for ( i = RC_FORMLESS; i < RC_BOSS; i++ ) {
 				if ( (type2 == RC_NONPLAYER && i == RC_PLAYER) ||
 	 				 (type2 == RC_NONDEMIHUMAN && i == RC_DEMIHUMAN) ||
 	 				 (type2 == RC_DEMIPLAYER && (i != RC_PLAYER && i != RC_DEMIHUMAN)) ||
@@ -4017,7 +4014,7 @@ int pc_skill(TBL_PC* sd, int id, int level, int flag)
 				clif->deleteskill(sd,id);
 			} else
 				clif->addskill(sd,id);
-			if( !skill->db[index].inf ) //Only recalculate for passive skills.
+			if( !skill->dbs->db[index].inf ) //Only recalculate for passive skills.
 				status_calc_pc(sd, SCO_NONE);
 		break;
 		case SKILL_GRANT_TEMPORARY: //Item bonus skill.
@@ -4051,7 +4048,7 @@ int pc_skill(TBL_PC* sd, int id, int level, int flag)
 				clif->deleteskill(sd,id);
 			} else
 				clif->addskill(sd,id);
-			if( !skill->db[index].inf ) //Only recalculate for passive skills.
+			if( !skill->dbs->db[index].inf ) //Only recalculate for passive skills.
 				status_calc_pc(sd, SCO_NONE);
 			break;
 		default: //Unknown flag?
@@ -4881,7 +4878,7 @@ int pc_isUseitem(struct map_session_data *sd,int n)
 int pc_useitem(struct map_session_data *sd,int n) {
 	int64 tick = timer->gettick();
 	int amount, nameid, i;
-	struct script_code *item_script;
+	bool removeItem = false;
 
 	nullpo_ret(sd);
 
@@ -4993,38 +4990,36 @@ int pc_useitem(struct map_session_data *sd,int n) {
 		sd->catch_target_class = -1;
 
 	amount = sd->status.inventory[n].amount;
-	item_script = sd->inventory_data[n]->script;
 	//Check if the item is to be consumed immediately [Skotlex]
 	if (sd->inventory_data[n]->flag.delay_consume || sd->inventory_data[n]->flag.keepafteruse)
 		clif->useitemack(sd,n,amount,true);
 	else {
 		if (sd->status.inventory[n].expire_time == 0) {
 			clif->useitemack(sd, n, amount - 1, true);
-			pc->delitem(sd, n, 1, 1, DELITEM_NORMAL, LOG_TYPE_CONSUME); // Rental Usable Items are not deleted until expiration
+			removeItem = true;
 		} else {
 			clif->useitemack(sd, n, 0, false);
 		}
 	}
+
 	if(sd->status.inventory[n].card[0]==CARD0_CREATE &&
 		pc->famerank(MakeDWord(sd->status.inventory[n].card[2],sd->status.inventory[n].card[3]), MAPID_ALCHEMIST))
 	{
-	    script->potion_flag = 2; // Famous player's potions have 50% more efficiency
-		 if (sd->sc.data[SC_SOULLINK] && sd->sc.data[SC_SOULLINK]->val2 == SL_ROGUE)
-			 script->potion_flag = 3; //Even more effective potions.
+		script->potion_flag = 2; // Famous player's potions have 50% more efficiency
+		if (sd->sc.data[SC_SOULLINK] && sd->sc.data[SC_SOULLINK]->val2 == SL_ROGUE)
+			script->potion_flag = 3; //Even more effective potions.
 	}
 
 	//Update item use time.
 	sd->canuseitem_tick = tick + battle_config.item_use_interval;
 	if( itemdb_iscashfood(nameid) )
 		sd->canusecashfood_tick = tick + battle_config.cashfood_use_interval;
-	
-	script->current_item_id = nameid;
-	
-	script->run(item_script,0,sd->bl.id,npc->fake_nd->bl.id);
-	
-	script->current_item_id = 0;
+
+	script->run_use_script(sd, sd->inventory_data[n], npc->fake_nd->bl.id);
 	script->potion_flag = 0;
-	
+
+	if (removeItem)
+		pc->delitem(sd, n, 1, 1, DELITEM_NORMAL, LOG_TYPE_CONSUME);
 	return 1;
 }
 
@@ -5706,14 +5701,14 @@ int pc_checkskill2(struct map_session_data *sd,uint16 index) {
 		ShowError("pc_checkskill: Invalid skill index %d (char_id=%d).\n", index, sd->status.char_id);
 		return 0;
 	}
-	if( skill->db[index].nameid >= GD_SKILLBASE && skill->db[index].nameid < GD_MAX ) {
+	if( skill->dbs->db[index].nameid >= GD_SKILLBASE && skill->dbs->db[index].nameid < GD_MAX ) {
 		struct guild *g;
 		
 		if( sd->status.guild_id>0 && (g=sd->guild)!=NULL)
-			return guild->checkskill(g,skill->db[index].nameid);
+			return guild->checkskill(g,skill->dbs->db[index].nameid);
 		return 0;
 	}
-	if(sd->status.skill[index].id == skill->db[index].nameid)
+	if(sd->status.skill[index].id == skill->dbs->db[index].nameid)
 		return (sd->status.skill[index].lv);
 	
 	return 0;
@@ -7015,7 +7010,7 @@ int pc_skillup(struct map_session_data *sd,uint16 skill_id) {
 	{
 		sd->status.skill[index].lv++;
 		sd->status.skill_point--;
-		if( !skill->db[index].inf )
+		if( !skill->dbs->db[index].inf )
 			status_calc_pc(sd,SCO_NONE); // Only recalculate for passive skills.
 		else if( sd->status.skill_point == 0 && (sd->class_&MAPID_UPPERMASK) == MAPID_TAEKWON && sd->status.base_level >= 90 && pc->famerank(sd->status.char_id, MAPID_TAEKWON) )
 			pc->calc_skilltree(sd); // Required to grant all TK Ranger skills.
@@ -7060,22 +7055,22 @@ int pc_allskillup(struct map_session_data *sd)
 	if (pc_has_permission(sd, PC_PERM_ALL_SKILL)) { //Get ALL skills except npc/guild ones. [Skotlex]
 		//and except SG_DEVIL [Komurka] and MO_TRIPLEATTACK and RG_SNATCHER [ultramage]
 		for(i=0;i<MAX_SKILL;i++){
-			switch( skill->db[i].nameid ) {
+			switch( skill->dbs->db[i].nameid ) {
 				case SG_DEVIL:
 				case MO_TRIPLEATTACK:
 				case RG_SNATCHER:
 					continue;
 				default:
-					if( !(skill->db[i].inf2&(INF2_NPC_SKILL|INF2_GUILD_SKILL)) )
-						if ( ( sd->status.skill[i].lv = skill->db[i].max ) )//Nonexistant skills should return a max of 0 anyway.
-							sd->status.skill[i].id = skill->db[i].nameid;
+					if( !(skill->dbs->db[i].inf2&(INF2_NPC_SKILL|INF2_GUILD_SKILL)) )
+						if ( ( sd->status.skill[i].lv = skill->dbs->db[i].max ) )//Nonexistant skills should return a max of 0 anyway.
+							sd->status.skill[i].id = skill->dbs->db[i].nameid;
 			}
 		}
 	} else {
 		int id;
 		for (i = 0; i < MAX_SKILL_TREE && (id=pc->skill_tree[pc->class2idx(sd->status.class_)][i].id) > 0; i++) {
 			int idx = pc->skill_tree[pc->class2idx(sd->status.class_)][i].idx;
-			int inf2 = skill->db[idx].inf2;
+			int inf2 = skill->dbs->db[idx].inf2;
 			if (
 				(inf2&INF2_QUEST_SKILL && !battle_config.quest_skill_learn) ||
 				(inf2&(INF2_WEDDING_SKILL|INF2_SPIRIT_SKILL)) ||
@@ -7298,17 +7293,17 @@ int pc_resetskill(struct map_session_data* sd, int flag)
 
 	for( i = 1; i < MAX_SKILL; i++ ) {
 		// FIXME: We're looping on i = [1..MAX_SKILL-1] (which makes sense as index for sd->status.skill[]) but then we're using the
-		// same i to access skill->db[], and especially to check skill_ischangesex(). This is wrong.
+		// same i to access skill->dbs->db[], and especially to check skill_ischangesex(). This is wrong.
 		uint16 skill_id = 0;
 		int lv = sd->status.skill[i].lv;
 		if (lv < 1) continue;
 
-		inf2 = skill->db[i].inf2;
+		inf2 = skill->dbs->db[i].inf2;
 
 		if( inf2&(INF2_WEDDING_SKILL|INF2_SPIRIT_SKILL) ) //Avoid reseting wedding/linker skills.
 			continue;
 		
-		skill_id = skill->db[i].nameid;
+		skill_id = skill->dbs->db[i].nameid;
 		
 		// Don't reset trick dead if not a novice/baby
 		if( skill_id == NV_TRICKDEAD && (sd->class_&(MAPID_BASEMASK|JOBL_2)) != MAPID_NOVICE ) {
@@ -9015,7 +9010,7 @@ int pc_readregistry(struct map_session_data *sd, int64 reg) {
 		ShowError("pc_readregistry: Trying to read reg %s before it's been loaded!\n", script->get_str(script_getvarid(reg)));
 		//This really shouldn't happen, so it's possible the data was lost somewhere, we should request it again.
 		//intif->request_registry(sd,type==3?4:type);
-		set_eof(sd->fd);
+		sockt->eof(sd->fd);
 		return 0;
 	}
 	
@@ -9036,7 +9031,7 @@ char* pc_readregistry_str(struct map_session_data *sd, int64 reg) {
 		ShowError("pc_readregistry_str: Trying to read reg %s before it's been loaded!\n", script->get_str(script_getvarid(reg)));
 		//This really shouldn't happen, so it's possible the data was lost somewhere, we should request it again.
 		//intif->request_registry(sd,type==3?4:type);
-		set_eof(sd->fd);
+		sockt->eof(sd->fd);
 		return NULL;
 	}
 
@@ -9439,7 +9434,14 @@ int pc_load_combo(struct map_session_data *sd) {
 	return ret;
 }
 
-void pc_equipitem_pos(struct map_session_data *sd, struct item_data *id, int pos)
+/**
+* Equip item ad given position.
+* @param sd the affected player structure. Must be checked before.
+* @param id item structure for equip. Must be checked before.
+* @param n inventory item position. Must be checked before.
+* @param pos slot position. Must be checked before.
+**/
+void pc_equipitem_pos(struct map_session_data *sd, struct item_data *id, int n, int pos)
 {
 	if (pos & (EQP_HAND_R|EQP_SHADOW_WEAPON)) {
 		if(id)
@@ -9613,7 +9615,7 @@ int pc_equipitem(struct map_session_data *sd,int n,int req_pos)
 
 	sd->status.inventory[n].equip=pos;
 
-	pc->equipitem_pos(sd, id, pos);
+	pc->equipitem_pos(sd, id, n, pos);
 
 	pc->checkallowskill(sd); //Check if status changes should be halted.
 	iflag = sd->npc_item_flag;
@@ -9641,7 +9643,8 @@ int pc_equipitem(struct map_session_data *sd,int n,int req_pos)
 	
 	//OnEquip script [Skotlex]
 	if (id->equip_script)
-		script->run(id->equip_script,0,sd->bl.id,npc->fake_nd->bl.id);
+		script->run_item_equip_script(sd, id, npc->fake_nd->bl.id);
+
 	if(itemdb_isspecial(sd->status.inventory[n].card[0]))
 		; //No cards
 	else {
@@ -9650,8 +9653,8 @@ int pc_equipitem(struct map_session_data *sd,int n,int req_pos)
 			if (!sd->status.inventory[n].card[i])
 				continue;
 			if ( ( data = itemdb->exists(sd->status.inventory[n].card[i]) ) != NULL ) {
-				if( data->equip_script )
-					script->run(data->equip_script,0,sd->bl.id,npc->fake_nd->bl.id);
+				if (data->equip_script)
+					script->run_item_equip_script(sd, data, npc->fake_nd->bl.id);
 			}
 		}
 	}
@@ -9660,6 +9663,12 @@ int pc_equipitem(struct map_session_data *sd,int n,int req_pos)
 	return 1;
 }
 
+/**
+* Unrquip item ad given position.
+* @param sd the affected player structure. Must be checked before.
+* @param n inventory item position. Must be checked before.
+* @param pos slot position. Must be checked before.
+**/
 void pc_unequipitem_pos(struct map_session_data *sd, int n, int pos)
 {
 	if (pos & EQP_HAND_R) {
@@ -9818,10 +9827,10 @@ int pc_unequipitem(struct map_session_data *sd,int n,int flag)
 			if ( battle_config.unequip_restricted_equipment & 1 ) {
 				ARR_FIND(0, map->list[sd->bl.m].zone->disabled_items_count, i,  map->list[sd->bl.m].zone->disabled_items[i] == sd->status.inventory[n].nameid);
 				if ( i == map->list[sd->bl.m].zone->disabled_items_count )
-					script->run(sd->inventory_data[n]->unequip_script,0,sd->bl.id,npc->fake_nd->bl.id);
+					script->run_item_unequip_script(sd, sd->inventory_data[n], npc->fake_nd->bl.id);
 			}
 			else
-				script->run(sd->inventory_data[n]->unequip_script,0,sd->bl.id,npc->fake_nd->bl.id);
+				script->run_item_unequip_script(sd, sd->inventory_data[n], npc->fake_nd->bl.id);
 		}
 		if(itemdb_isspecial(sd->status.inventory[n].card[0]))
 			; //No cards
@@ -9837,10 +9846,10 @@ int pc_unequipitem(struct map_session_data *sd,int n,int flag)
 							int j;
 							ARR_FIND(0, map->list[sd->bl.m].zone->disabled_items_count, j,  map->list[sd->bl.m].zone->disabled_items[j] == sd->status.inventory[n].card[i]);
 							if ( j == map->list[sd->bl.m].zone->disabled_items_count )
-								script->run(data->unequip_script,0,sd->bl.id,npc->fake_nd->bl.id);
+								script->run_item_unequip_script(sd, data, npc->fake_nd->bl.id);
 						}
 						else
-							script->run(data->unequip_script,0,sd->bl.id,npc->fake_nd->bl.id);
+							script->run_item_unequip_script(sd, data, npc->fake_nd->bl.id);
 					}
 				}
 
@@ -11346,7 +11355,34 @@ void pc_autotrade_populate(struct map_session_data *sd) {
 
 	pc->autotrade_update(sd,PAUC_START);
 	
+	for(i = 0; i < data->hdatac; i++ ) {
+		if( data->hdata[i]->flag.free ) {
+			aFree(data->hdata[i]->data);
+		}
+		aFree(data->hdata[i]);
+	}
+	if( data->hdata )
+		aFree(data->hdata);
+	
 	idb_remove(pc->at_db, sd->status.char_id);
+}
+
+/**
+ * @see DBApply
+ */
+int pc_autotrade_final(DBKey key, DBData *data, va_list ap) {
+	struct autotrade_vending* at_v = DB->data2ptr(data);
+	int i;
+	for(i = 0; i < at_v->hdatac; i++ ) {
+		if( at_v->hdata[i]->flag.free ) {
+			aFree(at_v->hdata[i]->data);
+		}
+		aFree(at_v->hdata[i]);
+	}
+	if( at_v->hdata )
+		aFree(at_v->hdata);
+		
+	return 0;
 }
 
 //Checks if the given class value corresponds to a player class. [Skotlex]
@@ -11365,7 +11401,7 @@ bool pc_db_checkid(unsigned int class_)
 void do_final_pc(void) {
 	
 	db_destroy(pc->itemcd_db);
-	db_destroy(pc->at_db);
+	pc->at_db->destroy(pc->at_db,pc->autotrade_final);
 	
 	pcg->final();
 	
@@ -11725,6 +11761,7 @@ void pc_defaults(void) {
 	pc->autotrade_start = pc_autotrade_start;
 	pc->autotrade_prepare = pc_autotrade_prepare;
 	pc->autotrade_populate = pc_autotrade_populate;
+	pc->autotrade_final = pc_autotrade_final;
 
 	pc->check_job_name = pc_check_job_name;
 }

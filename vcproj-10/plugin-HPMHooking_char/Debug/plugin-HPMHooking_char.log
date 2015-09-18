@@ -1,0 +1,23 @@
+﻿Build started 09-08-2015 21:46:52.
+     1>Project "X:\newserv\trunk\vcproj-10\plugin-HPMHooking_char.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "plugin-HPMHooking_char\Debug\plugin-HPMHooking_char.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I..\src /I..\3rdparty /I..\3rdparty\msinttypes\include /Zi /nologo /W3 /WX- /MP /Od /Oy- /D _DEBUG /D WIN32 /D _WINDOWS /D _USRDLL /D HPMHOOKING_CHAR /D _WINDLL /D _MBCS /Gm- /EHsc /RTC1 /MTd /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"plugin-HPMHooking_char\Debug\\" /Fd"plugin-HPMHooking_char\Debug\vc100.pdb" /Gd /TC /wd4996 /analyze- /errorReport:prompt ..\src\plugins\HPMHooking.c /MP 
+         HPMHooking.c
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"..\plugins\HPMHooking_char.dll" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"plugin-HPMHooking_char\Debug\HPMHooking_char.dll.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"plugin-HPMHooking_char\Debug\HPMHooking_char.pdb" /TLBID:1 /DYNAMICBASE:NO /NXCOMPAT /IMPLIB:"plugin-HPMHooking_char\Debug\HPMHooking_char.lib" /MACHINE:X86 /DLL "plugin-HPMHooking_char\Debug\HPMHooking.obj"
+            Creating library plugin-HPMHooking_char\Debug\HPMHooking_char.lib and object plugin-HPMHooking_char\Debug\HPMHooking_char.exp
+         plugin-HPMHooking_char.vcxproj -> X:\newserv\trunk\vcproj-10\..\plugins\HPMHooking_char.dll
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"..\plugins\HPMHooking_char.dll;#2" /manifest "plugin-HPMHooking_char\Debug\HPMHooking_char.dll.intermediate.manifest"
+       CopyFilesToOutputDirectory:
+         Copying file from "plugin-HPMHooking_char\Debug\HPMHooking_char.pdb" to "..\plugins\HPMHooking_char.pdb".
+       FinalizeBuildStatus:
+         Deleting file "plugin-HPMHooking_char\Debug\plugin-HPMHooking_char.unsuccessfulbuild".
+         Touching "plugin-HPMHooking_char\Debug\plugin-HPMHooking_char.lastbuildstate".
+     1>Done Building Project "X:\newserv\trunk\vcproj-10\plugin-HPMHooking_char.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:21.17
